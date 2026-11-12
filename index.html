@@ -200,6 +200,8 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
 .pill.co{background:rgba(246,200,110,.16);color:var(--gold)}
 .cashout{margin-top:10px;width:100%;background:rgba(246,200,110,.14);color:var(--gold);border:1px solid rgba(246,200,110,.4);font-weight:800;padding:9px;border-radius:9px;font-size:13.5px}
 .cashout:hover{background:rgba(246,200,110,.25)}
+.drawerscrim{display:none}
+#walletSheet .panel{max-width:520px;margin:0 auto}
 .minichips{display:flex;gap:6px;padding:11px 14px 3px}
 .minichips .chip{padding:5px 12px;font-size:12.5px}
 
@@ -218,6 +220,9 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
 @media (max-width:1020px){
   .layout{grid-template-columns:minmax(0,1fr)}
   .leftnav,.rightrail{display:none}
+  body.drawer .leftnav{display:block;position:fixed;top:0;left:0;bottom:0;height:auto;width:268px;z-index:160;background:var(--bg2);border-right:1px solid var(--line2);box-shadow:18px 0 44px rgba(0,0,0,.5);padding-top:20px;animation:slidein .22s ease}
+  @keyframes slidein{from{transform:translateX(-34px);opacity:.4}to{transform:none;opacity:1}}
+  body.drawer .drawerscrim{display:block;position:fixed;inset:0;background:rgba(2,8,14,.7);z-index:155}
   .topnav{display:none}
   main{padding:14px 13px 150px}
   .bottomnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,20,32,.98);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
@@ -251,9 +256,9 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
     <div class="searchres" id="searchRes"></div>
   </div>
   <div class="wallet">
-    <div class="balance"><span class="cur">USDT</span><span class="bal-num" id="balNum">1,000.00</span><span class="wbtn">👛</span></div>
-    <button class="iconbtn" title="Rewards">👑<span class="dot"></span></button>
-    <div class="avatar" title="Hubie">🦥</div>
+    <div class="balance" onclick="openWallet()" style="cursor:pointer" title="Wallet"><span class="cur">USDT</span><span class="bal-num" id="balNum">1,000.00</span><span class="wbtn">👛</span></div>
+    <button class="iconbtn" title="Rewards" onclick="scopeGo('Rewards');go('#/scope')">👑<span class="dot"></span></button>
+    <div class="avatar" title="Hubie" onclick="hubieTap()" style="cursor:pointer">🦥</div>
   </div>
 </header>
 
@@ -287,7 +292,7 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
 <!-- MOBILE: slip bar + bottom nav -->
 <div class="slipbar" id="slipBar"></div>
 <nav class="bottomnav">
-  <a href="#/home" data-nav="home"><span class="bi">☰</span>Menu</a>
+  <a href="#" onclick="toggleDrawer(event)"><span class="bi">☰</span>Menu</a>
   <a href="#/home" data-nav="home"><span class="bi">⚽</span>Sports</a>
   <a href="#/scope" data-nav="scope" onclick="scopeGo('Casino')"><span class="bi">🎰</span>Casino</a>
   <a href="#/scope" data-nav="scope" onclick="scopeGo('Chat')"><span class="bi">💬</span>Chat</a>
@@ -298,6 +303,23 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
 <div class="sheet" id="slipSheet">
   <div class="scrim" id="sheetScrim"></div>
   <div class="panel"><div class="grab"></div><div class="slipbox" id="slipBoxM" style="border:none"></div></div>
+</div>
+
+<div class="drawerscrim" onclick="closeDrawer()"></div>
+
+<!-- WALLET SHEET -->
+<div class="sheet" id="walletSheet">
+  <div class="scrim" onclick="closeWallet()"></div>
+  <div class="panel"><div class="grab"></div>
+    <div style="padding:2px 20px 0">
+      <h3 style="margin:4px 0 2px">👛 Wallet</h3>
+      <p style="color:var(--mut);margin:0 0 6px">Sample balance for this demo</p>
+      <div style="font-size:30px;font-weight:900" id="walletBal">1,000.00 USDT</div>
+      <p style="color:var(--dim);font-size:13px;line-height:1.55">Deposits and withdrawals live in the full Housebets product. This prototype only tracks the demo balance as you place sample bets.</p>
+      <button class="placebtn" onclick="closeWallet();go('#/slip')">🧾 See My Bets</button>
+      <button class="clearbtn" onclick="closeWallet()">Close</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -675,10 +697,9 @@ function searchGo(type){ $('#searchRes').classList.remove('show'); document.body
 let scopeName='Casino';
 function scopeGo(n){ scopeName=n; if(location.hash==='#/scope') renderScope(); }
 function renderScope(){
-  const isC=scopeName==='Casino';
   $('#page-scope').innerHTML=`
   <div style="max-width:420px;margin:52px auto;text-align:center;padding:0 18px">
-    <div style="font-size:54px">${isC?'🎰':'💬'}</div>
+    <div style="font-size:54px">${SCOPE_ICONS[scopeName]||'🎰'}</div>
     <h1 style="margin:14px 0 8px;font-size:24px">${scopeName} isn't part of this prototype</h1>
     <p style="color:var(--mut);line-height:1.6">This demo is the Housebets <b style="color:var(--txt)">sportsbook</b> — the five pages in the brief. ${scopeName} is a separate product area, so instead of a dead button or a borrowed page, this is the honest boundary of the demo.</p>
     <div style="max-width:300px;margin:24px auto 0">
@@ -688,6 +709,13 @@ function renderScope(){
   </div>`;
 }
 function toggleMobSearch(e){ e.preventDefault(); const on=document.body.classList.toggle('mobsearch'); if(on) setTimeout(()=>$('#searchInput').focus(),60); }
+const SCOPE_ICONS={Casino:'🎰',Chat:'💬',Rewards:'👑'};
+function toggleDrawer(e){ if(e)e.preventDefault(); document.body.classList.toggle('drawer'); }
+function closeDrawer(){ document.body.classList.remove('drawer'); }
+document.addEventListener('click',e=>{ if(e.target.closest('.leftnav .navitem')) closeDrawer(); });
+function openWallet(){ $('#walletBal').innerHTML=fmt(balance)+' <span style="font-size:15px;color:var(--acc)">USDT</span>'; $('#walletSheet').classList.add('open'); }
+function closeWallet(){ $('#walletSheet').classList.remove('open'); }
+function hubieTap(){ toast('🦥 That\'s Hubie — in this demo you\'re browsing as a guest with a 1,000 USDT sample balance.'); }
 const RENDER={home:renderHome,live:renderLive,football:renderFootball,match:renderMatch,slip:()=>{$('#page-slip').innerHTML=slipPageHTML();},scope:renderScope};
 function route(){
   let h=(location.hash||'#/home').replace('#/','').split('?')[0];
