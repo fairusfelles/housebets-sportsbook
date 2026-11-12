@@ -229,6 +229,7 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
   .slipbar .tot{margin-left:auto;font-weight:900}
   .odds3 .odd{min-width:48px}
   .searchbox{display:none}
+  body.mobsearch .searchbox{display:block;position:fixed;top:64px;left:10px;right:10px;max-width:none;z-index:140;background:var(--bg2);border:1px solid var(--line2);border-radius:14px;padding:8px}
   .balance .bal-num{display:none}
   .sb-score .sc{font-size:32px}
 }
@@ -239,7 +240,7 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
 <header class="topbar">
   <a class="logo" href="#/home"><span class="hmark">H</span><span>HOUSEBETS<small>SPORTSBOOK</small></span></a>
   <nav class="topnav">
-    <a href="#/home">Casino</a>
+    <a href="#/scope" onclick="scopeGo('Casino')">Casino</a>
     <a href="#/home" class="on">Sports</a>
     <a href="#/live">Live</a>
     <a href="#/slip">My Bets</a>
@@ -274,6 +275,7 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
     <section class="page" id="page-football"></section>
     <section class="page" id="page-match"></section>
     <section class="page" id="page-slip"></section>
+    <section class="page" id="page-scope"></section>
   </main>
 
   <!-- RIGHT RAIL: BET SLIP -->
@@ -287,9 +289,9 @@ h1.ptitle{font-size:24px;font-weight:800;margin-bottom:4px}
 <nav class="bottomnav">
   <a href="#/home" data-nav="home"><span class="bi">☰</span>Menu</a>
   <a href="#/home" data-nav="home"><span class="bi">⚽</span>Sports</a>
-  <a href="#/live" data-nav="live"><span class="bi">🎰</span>Casino</a>
-  <a href="#/live" data-nav="live"><span class="bi">💬</span>Chat</a>
-  <a href="#/football" data-nav="football"><span class="bi">🔍</span>Search</a>
+  <a href="#/scope" data-nav="scope" onclick="scopeGo('Casino')"><span class="bi">🎰</span>Casino</a>
+  <a href="#/scope" data-nav="scope" onclick="scopeGo('Chat')"><span class="bi">💬</span>Chat</a>
+  <a href="#" onclick="toggleMobSearch(event)"><span class="bi">🔍</span>Search</a>
 </nav>
 
 <!-- MOBILE: slip sheet -->
@@ -667,10 +669,26 @@ $('#searchInput').addEventListener('input',e=>{
   box.classList.add('show');
 });
 document.addEventListener('click',e=>{ if(!e.target.closest('.searchbox')) $('#searchRes').classList.remove('show'); });
-function searchGo(type){ $('#searchRes').classList.remove('show'); go(type==='Competition'||type==='Team'&&false?'#/football':type==='Team'?'#/football':'#/match'); if(type==='Market'||type==='Player') go('#/match'); }
+function searchGo(type){ $('#searchRes').classList.remove('show'); document.body.classList.remove('mobsearch'); go(type==='Competition'||type==='Team'&&false?'#/football':type==='Team'?'#/football':'#/match'); if(type==='Market'||type==='Player') go('#/match'); }
 
 /* ================= ROUTER ================= */
-const RENDER={home:renderHome,live:renderLive,football:renderFootball,match:renderMatch,slip:()=>{$('#page-slip').innerHTML=slipPageHTML();}};
+let scopeName='Casino';
+function scopeGo(n){ scopeName=n; if(location.hash==='#/scope') renderScope(); }
+function renderScope(){
+  const isC=scopeName==='Casino';
+  $('#page-scope').innerHTML=`
+  <div style="max-width:420px;margin:52px auto;text-align:center;padding:0 18px">
+    <div style="font-size:54px">${isC?'🎰':'💬'}</div>
+    <h1 style="margin:14px 0 8px;font-size:24px">${scopeName} isn't part of this prototype</h1>
+    <p style="color:var(--mut);line-height:1.6">This demo is the Housebets <b style="color:var(--txt)">sportsbook</b> — the five pages in the brief. ${scopeName} is a separate product area, so instead of a dead button or a borrowed page, this is the honest boundary of the demo.</p>
+    <div style="max-width:300px;margin:24px auto 0">
+      <button class="placebtn" onclick="go('#/home')">⚽ Back to Sports</button>
+      <button class="placebtn" style="background:var(--card3);color:var(--txt)" onclick="go('#/live')">🔴 See what's live</button>
+    </div>
+  </div>`;
+}
+function toggleMobSearch(e){ e.preventDefault(); const on=document.body.classList.toggle('mobsearch'); if(on) setTimeout(()=>$('#searchInput').focus(),60); }
+const RENDER={home:renderHome,live:renderLive,football:renderFootball,match:renderMatch,slip:()=>{$('#page-slip').innerHTML=slipPageHTML();},scope:renderScope};
 function route(){
   let h=(location.hash||'#/home').replace('#/','').split('?')[0];
   if(!RENDER[h]) h='home';
