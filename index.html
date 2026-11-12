@@ -336,7 +336,7 @@ const SPORTS=[
  {id:'tt',name:'Table Tennis',icon:'🏓',live:0,total:19},
 ];
 const COMPS=[
- {id:'epl',name:'Premier League',icon:'🏴󐁧󐁢󐁥󐁮󐁧󐁿',n:24,sport:'football'},
+ {id:'epl',name:'Premier League',icon:'🦁',n:24,sport:'football'},
  {id:'ucl',name:'Champions League',icon:'⭐',n:18,sport:'football'},
  {id:'laliga',name:'LaLiga',icon:'🇪🇸',n:20,sport:'football'},
  {id:'seriea',name:'Serie A',icon:'🇮🇹',n:20,sport:'football'},
@@ -461,7 +461,7 @@ function renderFootball(){
    ${leagues.map(lid=>{
      const c=COMPS.find(x=>x.id===lid);const rows=MATCHES.filter(m=>m.sport==='football'&&m.comp===lid);
      if(!rows.length)return'';
-     return `<div class="secttl">${c.icon} ${esc(c.name)}
+     return `<div class="secttl" id="lg-${lid}">${c.icon} ${esc(c.name)}
        <button class="fav ${follows.has(c.name)?'on':''}" onclick="toggleFollow('${esc(c.name)}')">${follows.has(c.name)?'★':'☆'}</button>
        <a class="more">${rows.length} matches</a></div>
        <div class="card">${rows.map(m=>matchRow(m,{click:true})).join('')}</div>`}).join('')}`;
@@ -667,12 +667,14 @@ function renderNav(){
   $('#sportNav').innerHTML=SPORTS.map(s=>`<div class="navitem ${s.id==='football'?'on':''}" onclick="sportGo('${s.id}')">
     <span class="ic">${s.icon}</span>${s.name}
     ${s.live?`<span class="cnt live">${s.live} live</span>`:`<span class="cnt">${s.total}</span>`}</div>`).join('');
-  $('#compNav').innerHTML=COMPS.map(c=>`<div class="navitem" onclick="go('#/football')"><span class="ic">${c.icon}</span>${esc(c.name)}<span class="cnt">${c.n}</span></div>`).join('');
+  $('#compNav').innerHTML=COMPS.map(c=>`<div class="navitem" onclick="compGo('${c.id}','${c.sport}')"><span class="ic">${c.icon}</span>${esc(c.name)}<span class="cnt">${c.n}</span></div>`).join('');
   const f=[...follows];
   $('#followNav').innerHTML=f.length?f.map(n=>`<div class="navitem" onclick="go('#/football')"><span class="ic">★</span>${esc(n)}</div>`).join('')
     :'<div style="padding:4px 10px;color:var(--dim);font-size:13px">Tap ☆ on a team or competition to follow it here.</div>';
 }
 function sportGo(id){ if(id==='football'){go('#/football');} else { liveFilter=MATCHES.some(m=>m.live&&m.sport===id)?id:'all'; go('#/live'); if(location.hash==='#/live') route(); } }
+let pendingLeague=null;
+function compGo(id,sport){ if(sport==='football'){ pendingLeague=id; go('#/football'); } else sportGo(sport); }
 function toggleFollow(n){ follows.has(n)?follows.delete(n):follows.add(n); renderNav(); route(); }
 function go(h){ if(location.hash===h){route();} else location.hash=h; }
 
@@ -725,6 +727,7 @@ function route(){
   RENDER[h]();
   $$('.bottomnav a').forEach(a=>a.classList.toggle('on',a.dataset.nav===h));
   renderSlip();
+  if(pendingLeague){ const el=document.getElementById('lg-'+pendingLeague); pendingLeague=null; if(el){ el.scrollIntoView({block:'start'}); return; } }
   window.scrollTo({top:0});
 }
 window.addEventListener('hashchange',route);
